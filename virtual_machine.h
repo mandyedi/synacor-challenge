@@ -122,7 +122,6 @@ public:
 
             MemoryOffset++;
 
-            // TODO when fixed, find "\nThere" and debug from it
             if ( debugEnabled && ( ( !DebugActive && debugAddress == stepFrom ) || DebugActive ) )
             {
                 DebugActive = true;
@@ -173,7 +172,6 @@ public:
         {
             std::cout << "[VM] Start disassembling.\n";
 
-            std::vector<int32> charCodes;
             uint32 offset = 0;
             while( offset < MemorySize )
             {
@@ -199,41 +197,42 @@ public:
                         }
                     }
                     f << "\n";
+                    offset++;
                 }
                 else if ( opCode == 19 )
                 {
-                    offset++;
-                    if ( Memory[offset + 1] != 19 )
+                    f << offset << ": ";
+                    f << OpNames[opCode] << " \"";
+                    do
                     {
-                        f << offset << ": ";
-                        f << OpNames[opCode] << " \"";
-                        for (int i = 0; i < charCodes.size(); i++)
+                        offset++;
+                        uint16 charCode = Memory[offset];
+
+                        if ( charCode >= register_0 && charCode <= register_7 )
                         {
-                            int32 charCode = charCodes[i];
-                            switch(charCode)
-                            {
-                                case 10:
-                                    f << "\\n";
-                                    break;
-                                default:
-                                    f << (char)charCode;
-                                    break;        
-                            }
-                                
+                            f << RegisterNames[charCode % register_0];
                         }
-                        charCodes.clear();
-                        f << "\"\n";
-                    }
-                    else
-                    {
-                        charCodes.push_back( (int32)Memory[offset] );
-                    }
+                        else if ( charCode >= 32 && charCode <= 126 )
+                        {
+                            f << (char)charCode;
+                        }
+                        else if ( charCode == 10 )
+                        {
+                            f << "\\n";
+                        }
+                        else
+                        {
+                            f << charCode;
+                        }
+                    } while( (OPCODE)Memory[++offset] == OPCODE::OUT );
+                    f << "\"\n";
                 }
                 else
                 {
                     f << offset << ": ";
                     f << opCode;
                     f << "\n";
+                    offset++;
                 }
 
                 offset++;
