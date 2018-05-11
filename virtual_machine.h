@@ -495,7 +495,7 @@ private:
             {
                 if ( !DebugActive )
                 {
-                    std::cout << (char)args[0];
+                    std::cout << (char)GetLiteral( args[0] );
                 }
                 break;
             }
