@@ -20,10 +20,3 @@ Debug:
 synacor challenge.bin debug x
 x: breakpoint at memory address
 Use Enter to step over next opcode
-
-##### What works:
-* Disassembler
-* Debug with step over. Prints registers and stack.
-
-##### Known bugs:
-* Self test messes up the output
