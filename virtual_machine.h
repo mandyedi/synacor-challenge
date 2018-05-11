@@ -21,6 +21,32 @@ const uint16 register_5 = 32773;
 const uint16 register_6 = 32774;
 const uint16 register_7 = 32775;
 
+enum class OPCODE
+{
+    HALT = 0,
+    SET,
+    PUSH,
+    POP,
+    EQ,
+    GT,
+    JMP,
+    JT,
+    JF,
+    ADD,
+    MULT,
+    MOD,
+    AND,
+    OR,
+    NOT,
+    RMEM,
+    WMEM,
+    CALL,
+    RET,
+    OUT,
+    IN,
+    NOOP
+};
+
 class VirtualMachine
 {
 
@@ -31,6 +57,8 @@ public:
     , MemorySize( 0 )
     , MemoryOffset( 0 )
     , Executing( false )
+    , DebugEnabled( false )
+    , DebugActive( false )
     {
         for ( int i = 0; i < 8; i++ )
         {
@@ -67,14 +95,17 @@ public:
         }
     }
 
-    void Run()
+    void Run( bool debugEnabled, uint32 stepFrom = 0 )
     {
         uint16 args[3];
         Executing = true;
         int32 cycle = 0;
+
         while( MemoryOffset < MemorySize && Executing /*&& cycle < 1000*/ )
         {
             // std::cout << MemoryOffset << ": " << Memory[ MemoryOffset ] << std::endl;
+
+            uint32 debugAddress = MemoryOffset;
 
             uint16 opCode       = Memory[ MemoryOffset ];
             uint16 numberOfArgs = ArgCount[ opCode ];
@@ -90,6 +121,39 @@ public:
             // std::cout << "\n";
 
             MemoryOffset++;
+
+            // TODO when fixed, find "\nThere" and debug from it
+            if ( debugEnabled && ( ( !DebugActive && debugAddress == stepFrom ) || DebugActive ) )
+            {
+                DebugActive = true;
+                std::cout << "Registers:\n";
+                for ( int i = 0; i < 8; i++ )
+                {
+                    std::cout << RegisterNames[i] << ": " << Registers[i] << "\n";
+                }
+
+                std::cout << "Stack:\n";
+                PrintStack();
+
+                std::cout << "Execute next: " << debugAddress << ": " << OpNames[opCode];
+                for ( int i = 0; i < numberOfArgs; i++ )
+                {
+                    if ( (OPCODE)opCode == OPCODE::OUT )
+                    {
+                        std::cout << " " << "'" << (char)args[i] << "'";
+                    }
+                    else if ( args[i] >= register_0 && args[i] <= register_7 )
+                    {
+                        std::cout << " " << RegisterNames[ args[i] % register_0 ];
+                    }
+                    else
+                    {
+                        std::cout << " " << args[i];
+                    }
+                }
+                std::cout << "\n"; 
+                std::cin.get();
+            }
 
             HandleOPCode( opCode, args );
 
@@ -430,7 +494,10 @@ private:
             // write the character represented by ascii code <a> to the terminal
             case 19:
             {
-                std::cout << (char)args[0];
+                if ( !DebugActive )
+                {
+                    std::cout << (char)args[0];
+                }
                 break;
             }
 
@@ -460,12 +527,46 @@ private:
         }
     }
 
+    void PrintStack()
+    {
+        // Copy Stack to a std::vector
+        // Print std::vector
+        // Copy std::vector content back to Stack
+
+        if ( Stack.empty() )
+        {
+            std::cout << "empty\n";
+        }
+
+        std::vector<uint16> v;
+
+        while ( !Stack.empty() )
+        {
+            v.push_back( Stack.top() );
+            Stack.pop();
+        }
+
+        std::vector<uint16>::iterator it = v.begin();
+        for ( ; it != v.end(); ++it )
+        {
+            std::cout << *it << "\n";
+        }
+
+        std::vector<uint16>::reverse_iterator rit = v.rbegin();
+        for ( ; rit != v.rend(); ++rit )
+        {
+            Stack.push( *rit );
+        }
+    }
+
     uint16 *Memory;
     uint32  MemorySize;
     uint32  MemoryOffset;
     uint16  Registers[8];
     std::stack<uint16> Stack;
     bool    Executing;
+    bool    DebugEnabled;
+    bool    DebugActive;
 
     uint16 ArgCount[22] = {
         0, // halt: 0
