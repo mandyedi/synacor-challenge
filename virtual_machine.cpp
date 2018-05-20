@@ -182,8 +182,6 @@ void VirtualMachine::Disassemble( const std::string &fileName )
                 f << "\n";
                 offset++;
             }
-
-            offset++;
         }
         f.close();
     }
