@@ -5,18 +5,20 @@
 
 My solution written in c++. See detailed spec in **arch-spec**.
 
-##### Usage
+## Usage
 
 Execute challenge:
 
-synacor challenge.bin
+```synacor challenge.bin```
 
 Disassemble:
 
-synacor challenge.bin asm
+```synacor challenge.bin asm```
 
 Debug:
 
+```
 synacor challenge.bin debug x
 x: breakpoint at memory address
 Use Enter to step over next opcode
+```
